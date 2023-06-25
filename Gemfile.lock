@@ -1,3 +1,8 @@
+PATH
+  remote: .
+  specs:
+    tale (0.2.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -279,6 +284,7 @@ DEPENDENCIES
   rack (~> 2.2.4)
   rake
   rspec
+  tale!
   tzinfo (>= 1, < 3)
   tzinfo-data
   wdm (~> 0.1.1)
