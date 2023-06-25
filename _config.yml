@@ -1,5 +1,5 @@
 # Site settings
-title:          daweibayu
+title:          大尾巴鱼
 description:    "个人博客网站"
 baseurl:        ""
 url:            "https://daweibayu.fun"
@@ -9,7 +9,7 @@ google_analytics: UA—XXXXXXXX-X
 
 # Author
 author:
-  name:         大尾巴鱼
+  name:         daweibayu
   url:          https://daweibayu.fun
   email:        daweibayu@gmail.com
 
