@@ -1,3 +1,13 @@
+---
+layout: post
+title:  "Poj 2063 Investment"
+author: "daweibayu"
+tags: 解题报告
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
+
 ## 题目
 Poj 2063 [Investment](http://poj.org/problem?id=2063)
 ```
@@ -50,7 +60,7 @@ value(债券价格) interest(每年的利息)
 3. 剩下的问题就是计算 result[] 了，标准的背包问题，这里我就不细说了，如果不了解的话直接看《背包九讲》吧。
 
 ## 代码
-```
+```c++
 // http://poj.org/problem?id=2063
 #include <stdio.h>
 #include <iostream>

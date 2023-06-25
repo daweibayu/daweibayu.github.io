@@ -1,3 +1,13 @@
+---
+layout: post
+title:  "Poj 2392 Space Elevator"
+author: "daweibayu"
+tags: 解题报告
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
+
 ## 题目
 [Space Elevator](http://poj.org/problem?id=2392)
 
@@ -31,7 +41,7 @@ Sample Output
 ## 代码
 不做过多解释，与 [Poj 1742](http://www.jianshu.com/p/51898d991a68) 类似，稍作修改，排序，然后依然 bitset A 掉。
 
-```
+```c++
 #include <stdio.h>
 #include <iostream>
 #include <bitset>

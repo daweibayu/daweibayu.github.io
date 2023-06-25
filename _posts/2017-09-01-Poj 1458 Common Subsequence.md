@@ -1,3 +1,11 @@
+---
+layout: post
+title:  "Poj 1458 Common Subsequence"
+author: "daweibayu"
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
 
 Poj 1458 [Common Subsequence](http://poj.org/problem?id=1458)
 
@@ -39,7 +47,7 @@ Sample Output
 
 
 ## 代码
-```
+```c++
 #include <stdio.h>
 #include <cstring>
 

@@ -1,3 +1,13 @@
+---
+layout: post
+title:  "Poj 1276 Cash Machine"
+author: "daweibayu"
+tags: 解题报告
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
+
 ## 题目
 [Cash Machine](http://poj.org/problem?id=1276)
 
@@ -48,7 +58,7 @@ ni Di 分别代表每种钞票的数量与价值
 ## 代码
 不做过多解释，与 [Poj 1742](http://www.jianshu.com/p/51898d991a68) 基本认为是一道题，直接 copy 过来，稍作修改，一次 A 过
 
-```
+```c++
 #include <stdio.h>
 #include <iostream>
 #include <bitset>

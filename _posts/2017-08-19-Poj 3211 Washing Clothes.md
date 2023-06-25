@@ -1,3 +1,13 @@
+---
+layout: post
+title:  "Poj 3211 Washing Clothes"
+author: "daweibayu"
+tags: 解题报告
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
+
 ## 题目
 Poj 3211 [Washing Clothes](http://poj.org/problem?id=3211)
 ```
@@ -32,7 +42,7 @@ Sample Output
 2. 计算每种颜色的时候，可以转化为背包问题。因为是双线程，如果单人总耗时为 total 的话，两个人中肯定有一个的耗时是 >= total/2 的，所以可以理解为容量为 total/2 的背包，计算背包的最大重量，然后 “total - 最大重量” 就是单色的耗时了。
 
 ## 代码
-```
+```c++
 #include <stdio.h>
 #include <iostream>
 #include <bitset>

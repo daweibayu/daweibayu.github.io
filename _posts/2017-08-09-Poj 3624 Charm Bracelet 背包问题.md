@@ -1,9 +1,12 @@
 ---
 layout: post
-title:  "Poj 3624 Charm Bracelet 背包问题"
+title:  "Poj 3624 Charm Bracelet"
 author: "daweibayu"
-tags: 解题报告 背包
+tags: 解题报告
+excerpt_separator: <!--more-->
 ---
+
+<!--more-->
 
 在搞男人八题之[An old Stone Game](http://poj.org/problem?id=1738)时竟没有思路了，其实问题不复杂，但是当数据过大时就没法用暴力解决了。感觉这题有点类似背包问题，但是发现竟然想不起背包问题的解决方案了，所以找个最简单的背包问题，先练练手。
 
@@ -40,7 +43,7 @@ Sample Output
 a(n) 表示第 n 项的 value，b(n) 表示第 n 项的 weight
 f(n, m) 表示前 n 项中可以装的最大 value（weight 不超过 m）
 则有：
-![屏幕快照 2017-08-09 下午1.29.49.png](http://upload-images.jianshu.io/upload_images/2829180-b6b991a3b806d8d9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![屏幕快照 2017-08-09 下午1.29.49.png](/assets/images/b6b991a3b806d8d9.webp)
 根据公式写出如下代码：
 {% highlight c++ %}
 int weight[4000];
