@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "线程的本质（Java 层实现）"
+title:  "线程的本质（jdk 层实现）"
 author: "daweibayu"
 tags: Android
 excerpt_separator: <!--more-->
@@ -8,7 +8,10 @@ excerpt_separator: <!--more-->
 
 <!--more-->
 
-关于上下文请看 [线程本质]()，下面我们直接进入正题。
+[Thread.java](https://cs.android.com/android/platform/superproject/+/android-13.0.0_r29:libcore/ojluni/src/main/java/java/lang/Thread.java)
+
+
+关于上下文请看 [线程本质](/2017-04-26/threadintro)，下面我们直接进入正题。
 
 ## 使用
 先看看我们平时使用的方式，使用线程常见的代码如下：
