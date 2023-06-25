@@ -1,11 +1,19 @@
-# SharedPreferences
+---
+layout: post
+title:  "SharedPreferences"
+author: "daweibayu"
+tags: Android
+excerpt_separator: <!--more-->
+---
+
+<!--more-->
 
 此文主要讲解 SharedPreferences 的具体原理。
 搞 Android 的相信应该都使用过 SharedPreferences，相信也都知道此工具主要用于保存的相对较小键值集合，但是具体原因，大家可能不太清楚，这也造成一些乱用。
 源码说明一切，下面我们来分析一下源码。
 
 ## 使用
-```
+```java
 SharedPreferences sp = getApplicationContext().getSharedPreferences("keyzone", Context.MODE_PRIVATE);
 SharedPreferences.Editor editor = sp.edit();
 editor.putString("key", "value");
@@ -15,7 +23,7 @@ editor.commit();
 
 ## SharedPreferences
 从上边代码，我们看到的只涉及 SharedPreferences.java，那我们就先看一下这个类，源码如下：
-```
+```java
 public interface SharedPreferences {
 
     public interface OnSharedPreferenceChangeListener {
@@ -59,7 +67,7 @@ public interface SharedPreferences {
 
 ## SharedPreferencesImpl
 Android 里边一些实现类都是类似命名，在其后添加 impl（implements 缩写），例如 Context（ContextImpl）等，至于我们是怎么找到这个 class 的，我们后边再说。接下来我们看一下 SharedPreferencesImpl 的实现。为了展示主线，删除了很多具体的逻辑，如果想知道具体的操作，可以自己查阅源码。
-```
+```java
 final class SharedPreferencesImpl implements SharedPreferences {
 
   private Map<String, Object> mMap;
@@ -156,7 +164,7 @@ final class SharedPreferencesImpl implements SharedPreferences {
 
 ## ContextImpl
 我们看到构造函数 SharedPreferencesImpl(File file, int mode) 是根据 File 来构造的，但是我们使用时 getSharedPreferences("keyzone", Context.MODE_PRIVATE) 却是根据 keyzone 来获取的，那这里是怎么关联起来的呢？这里就涉及到 ContextImpl 了。一些关键代码如下：
-```
+```java
 class ContextImpl extends Context {
 
     private static ArrayMap<String, ArrayMap<File, SharedPreferencesImpl>> sSharedPrefsCache;
