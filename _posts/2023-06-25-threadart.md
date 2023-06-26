@@ -183,22 +183,23 @@ void Thread::CreateNativeThread(JNIEnv* env, jobject java_peer, size_t stack_siz
 }
 ```
 
-由上可以看出， art 中的 thread.cc 角色跟 jdk 中的 Thread.java 其实差不多，都是包装层。具体线程的申请由 pthread_create 实现
+由上可以看出， art 中的 thread.cc 角色跟 jdk 中的 Thread.java 其实差不多，都是包装层。
+这么说或许也有些不准确，应该是 pthread 是  art thread 中的一个成员，具体线程相关操作由 pthread 去执行。
+而具体线程资源的申请由 pthread_create 实现。
 
 ### pthread
 
 ```c++
 __BIONIC_WEAK_FOR_NATIVE_BRIDGE
 int pthread_create(pthread_t* thread_out, pthread_attr_t const* attr, void* (*start_routine)(void*), void* arg) {
-  ErrnoRestorer errno_restorer;
 
   pthread_attr_t thread_attr;
-  ScopedTrace trace("pthread_create");
+
   if (attr == nullptr) {
     pthread_attr_init(&thread_attr);
   } else {
     thread_attr = *attr;
-    attr = nullptr; // Prevent misuse below.
+    attr = nullptr;
   }
 
   bionic_tcb* tcb = nullptr;
@@ -210,71 +211,19 @@ int pthread_create(pthread_t* thread_out, pthread_attr_t const* attr, void* (*st
 
   pthread_internal_t* thread = tcb->thread();
 
-  // Create a lock for the thread to wait on once it starts so we can keep
-  // it from doing anything until after we notify the debugger about it
-  //
-  // This also provides the memory barrier we need to ensure that all
-  // memory accesses previously performed by this thread are visible to
-  // the new thread.
-  thread->startup_handshake_lock.init(false);
-  thread->startup_handshake_lock.lock();
+  ...
 
-  thread->start_routine = start_routine;
-  thread->start_routine_arg = arg;
-
-  thread->set_cached_pid(getpid());
-
-  int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM |
-      CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
-  void* tls = &tcb->tls_slot(0);
-#if defined(__i386__)
-  // On x86 (but not x86-64), CLONE_SETTLS takes a pointer to a struct user_desc rather than
-  // a pointer to the TLS itself.
-  user_desc tls_descriptor;
-  __init_user_desc(&tls_descriptor, false, tls);
-  tls = &tls_descriptor;
-#endif
-
-  ScopedReadLock locker(&g_thread_creation_lock);
-
-  sigset64_t block_all_mask;
-  sigfillset64(&block_all_mask);
-  __rt_sigprocmask(SIG_SETMASK, &block_all_mask, &thread->start_mask, sizeof(thread->start_mask));
-  int rc = clone(__pthread_start, child_stack, flags, thread, &(thread->tid), tls, &(thread->tid));
+    int rc = clone(__pthread_start, child_stack, flags, thread, &(thread->tid), tls, &(thread->tid));
   __rt_sigprocmask(SIG_SETMASK, &thread->start_mask, nullptr, sizeof(thread->start_mask));
-  if (rc == -1) {
-    int clone_errno = errno;
-    // We don't have to unlock the mutex at all because clone(2) failed so there's no child waiting to
-    // be unblocked, but we're about to unmap the memory the mutex is stored in, so this serves as a
-    // reminder that you can't rewrite this function to use a ScopedPthreadMutexLocker.
-    thread->startup_handshake_lock.unlock();
-    if (thread->mmap_size != 0) {
-      munmap(thread->mmap_base, thread->mmap_size);
-    }
-    async_safe_format_log(ANDROID_LOG_WARN, "libc", "pthread_create failed: clone failed: %s",
-                          strerror(clone_errno));
-    return clone_errno;
-  }
+
+  ...
 
   int init_errno = __init_thread(thread);
-  if (init_errno != 0) {
-    // Mark the thread detached and replace its start_routine with a no-op.
-    // Letting the thread run is the easiest way to clean up its resources.
-    atomic_store(&thread->join_state, THREAD_DETACHED);
-    __pthread_internal_add(thread);
-    thread->start_routine = __do_nothing;
-    thread->startup_handshake_lock.unlock();
-    return init_errno;
-  }
-
-  // Publish the pthread_t and unlock the mutex to let the new thread start running.
-  *thread_out = __pthread_internal_add(thread);
-  thread->startup_handshake_lock.unlock();
-
-  return 0;
+  ...
 }
 ```
 
+pthread_create 中的 __allocate_thread 函数去创建线程栈等
 ```c++
 static int __allocate_thread(pthread_attr_t* attr, bionic_tcb** tcbp, void** child_stack) {
   ThreadMapping mapping;
@@ -341,7 +290,7 @@ static int __allocate_thread(pthread_attr_t* attr, bionic_tcb** tcbp, void** chi
 }
 ```
 
-其中关键函数唯 clone，clone 的代码位于 [clone.cpp](https://cs.android.com/android/platform/superproject/+/refs/heads/master:bionic/libc/bionic/clone.cpp)
+pthread_create 中的 clone 去申请内核线程等资源，clone 的代码位于 [clone.cpp](https://cs.android.com/android/platform/superproject/+/refs/heads/master:bionic/libc/bionic/clone.cpp)
 ```c++
 __BIONIC_WEAK_FOR_NATIVE_BRIDGE
 int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
@@ -399,12 +348,6 @@ int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
   }
 
   if (clone_result != 0) {
-    // We're the parent, so put our known pid and tid back in place.
-    // We leave the child without a cached pid and tid, but:
-    // 1. pthread_create gives its children their own pthread_internal_t with the correct pid and tid.
-    // 2. fork uses CLONE_CHILD_SETTID to get the new pid/tid.
-    // 3. The tid is lazily fetched in gettid().
-    // If any other cases become important, we could use a double trampoline like __pthread_start.
     self->set_cached_pid(parent_pid);
     self->tid = caller_tid;
   } else if (self->tid == -1) {
