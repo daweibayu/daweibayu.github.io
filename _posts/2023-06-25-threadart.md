@@ -17,11 +17,11 @@ Bionic：Bionic库是Android的基础库之一，也是连接Android和Linux的�
 
 我们都知道 Android 在 5.0 后切换到 art ([5.0 behavior change](https://developer.android.com/about/versions/lollipop/android-5.0-changes))，所以搜索相关代码时需要在 art 目录下寻找，避免找错。
 
-[runtime.cc](https://cs.android.com/android/platform/superproject/+/refs/heads/master:art/runtime/runtime.cc)
-[native_util.h](https://cs.android.com/android/platform/superproject/+/refs/heads/master:art/runtime/native/native_util.h)
-[java_long_thread.cc](https://cs.android.com/android/platform/superproject/+/master:art/runtime/native/java_lang_Thread.cc)
-[thread.cc](https://cs.android.com/android/platform/superproject/+/master:art/runtime/thread.cc)
-[pthread.cpp](https://cs.android.com/android/platform/superproject/+/refs/heads/master:bionic/libc/bionic/pthread_create.cpp)
+* [runtime.cc](https://cs.android.com/android/platform/superproject/+/refs/heads/master:art/runtime/runtime.cc)
+* [native_util.h](https://cs.android.com/android/platform/superproject/+/refs/heads/master:art/runtime/native/native_util.h)
+* [java_long_thread.cc](https://cs.android.com/android/platform/superproject/+/master:art/runtime/native/java_lang_Thread.cc)
+* [thread.cc](https://cs.android.com/android/platform/superproject/+/master:art/runtime/thread.cc)
+* [pthread.cpp](https://cs.android.com/android/platform/superproject/+/refs/heads/master:bionic/libc/bionic/pthread_create.cpp)
 
 ## 主题
 
@@ -183,7 +183,7 @@ void Thread::CreateNativeThread(JNIEnv* env, jobject java_peer, size_t stack_siz
 }
 ```
 
-由上可以看出， art 中的 thread.cc 角色跟 jdk 中的 Thread.java 其实差不多，都是包装层
+由上可以看出， art 中的 thread.cc 角色跟 jdk 中的 Thread.java 其实差不多，都是包装层。具体线程的申请由 pthread_create 实现
 
 ### pthread
 
@@ -417,4 +417,35 @@ int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
 
 ```
 
-而这中的关键调用是 __bionic_clone
+而这中的关键调用是 __bionic_clone，代码位于 [__bionic_clone.S](https://cs.android.com/android/platform/superproject/+/master:bionic/libc/arch-arm64/bionic/__bionic_clone.S)
+```
+ENTRY_PRIVATE(__bionic_clone)
+    # Push 'fn' and 'arg' onto the child stack.
+    stp     x5, x6, [x1, #-16]!
+
+    # Make the system call.
+    mov     x8, __NR_clone
+    svc     #0
+
+    # Are we the child?
+    cbz     x0, .L_bc_child
+
+    # Set errno if something went wrong.
+    cmn     x0, #(MAX_ERRNO + 1)
+    cneg    x0, x0, hi
+    b.hi    __set_errno_internal
+
+    ret
+
+.L_bc_child:
+    # We're in the child now. Set the end of the frame record chain.
+    mov     x29, #0
+    # Setting x30 to 0 will make the unwinder stop at __start_thread.
+    mov     x30, #0
+    # Call __start_thread with the 'fn' and 'arg' we stored on the child stack.
+    ldp     x0, x1, [sp], #16
+    b       __start_thread
+END(__bionic_clone)
+```
+
+arm 64 下通过 svc 指令触发，然后就由用户态转到核态，具体看下一篇文章啦
