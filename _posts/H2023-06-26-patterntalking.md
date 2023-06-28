@@ -4,7 +4,6 @@ title:  "设计模式漫谈"
 author: "daweibayu"
 tags: Android
 excerpt_separator: <!--more-->
-hidden: true
 ---
  <!--more-->
 
