@@ -126,6 +126,6 @@ bool ro_debuggable = (strcmp(value, "1") == 0);
 
 以上修改是否可以成功呢？我也不是很确定，那我们就试试看咯
 
-按照 [MacOS 10.13 编译 Android 源码](https://www.jianshu.com/p/122fff2d4e37)文中编译、刷机步骤再搞一下。
+按照 [MacOS 10.13 编译 Android 源码](/2018-09-04/androidSrcBuildOnMac)文中编译、刷机步骤再搞一下。
 
 刷机成功后 `adb shell` 上去就已经是 root 了，那证明我们前边搞的都是没问题的，在验证下 `/default.prop` 与 `/system/build.prop`，也改过来了~~~~
