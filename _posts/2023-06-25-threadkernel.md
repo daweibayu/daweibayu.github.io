@@ -235,8 +235,12 @@ int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 [sched.h](https://android.googlesource.com/kernel/common/+/refs/heads/android-gs-bluejay-5.10-android13/include/linux/sched.h)
 
 ### 总结
+
 art 线程 Thread.cc 通过 pthread 函数库同内核线程建立 1:1 的联系并交互。
 那线程的本质是啥？线程的本质就是一个数据结构，在 linux 下就是 task_struct。这么说就好像说人的本质就是大脑，手眼胳膊腿全成了无关紧要之物，事实自然不是如此，就像佛教非要在六识之上搞个阿赖耶识，为了作为轮回的承载主体。
 是 cpu 执行线程上下文中的代码，而不是线程执行代码，只不过在用户层很多人感觉是线程在执行逻辑，就像人们感知到的是太阳围着地球转。所有的代码都是死物，只有 cpu 或 gpu 才是拨动命运转盘的手。
 
 
+### 引申
+说到这里想聊两句协程，首先可以知道 Android 中的协程并没有 native 单独的代码支持，所以可以得到的结论是协程并没有什么方法可以在现有的基础上**提高 cpu 的利用率**。协程表现出来的异步逻辑同步化的特性，也可以认为是上层的语法糖。
+这种语法糖的好处是**提高了开发效率**。当然这只是现状，至于 google 是否想对协程做 native 的支持，我认为是有这个倾向的。尤其是 kotlin 1.4 提出的 expect && actual 关键字，其实可以很明显的表露出 kotlin 准备要全平台的野心。这也是为啥我认为 kmm 的实操性会高于 Flluter 的原因。
