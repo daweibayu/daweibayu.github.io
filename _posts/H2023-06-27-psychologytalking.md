@@ -4,7 +4,6 @@ title:  "心理学杂谈"
 author: "daweibayu"
 tags: 心理学
 excerpt_separator: <!--more-->
-hidden: true
 ---
  <!--more-->
 
