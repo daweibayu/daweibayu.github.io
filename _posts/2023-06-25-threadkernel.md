@@ -7,6 +7,12 @@ excerpt_separator: <!--more-->
 ---
  <!--more-->
 
+ ### 源码位置
+
+ 注意 Android 源码中并不包含 kernel 部分的源码，需要单独下载 [构建内核](https://source.android.com/docs/setup/build/building-kernels) 或者线上 [Common Android Kernel Tree](https://android.googlesource.com/kernel/common/)
+ 注意版本选择，本文中参考的是 android-gs-bluejay-5.10-android13 版本的源码
+
+### 主题
  书接上回，由 android bionic 层代码  [__bionic_clone.S](https://cs.android.com/android/platform/superproject/+/master:bionic/libc/arch-arm64/bionic/__bionic_clone.S) 知道通过 svc 进入内核态，调用编号为 __NR_clone：
  ```shell
      # Make the system call.
@@ -218,6 +224,8 @@ int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 }
 ```
 
+
+未完待续
 
  
 [kthread.c](https://android.googlesource.com/kernel/common/+/refs/heads/android-gs-bluejay-5.10-android13/kernel/kthread.c)

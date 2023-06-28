@@ -23,6 +23,8 @@ Bionic：Bionic库是Android的基础库之一，也是连接Android和Linux的�
 * [thread.cc](https://cs.android.com/android/platform/superproject/+/master:art/runtime/thread.cc)
 * [pthread.cpp](https://cs.android.com/android/platform/superproject/+/refs/heads/master:bionic/libc/bionic/pthread_create.cpp)
 
+关于 Android 源码的下载，可以直接看 [官方](https://source.android.com/docs/setup/download/downloading) 也可以参考 [MacOS 下载 Android 源码](/2018-09-03/androidSrcDownloadInMac)
+
 ## 主题
 
 上文提到的关键 native 调用是 nativeCreate，我们就由此展开

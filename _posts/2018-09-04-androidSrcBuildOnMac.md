@@ -70,7 +70,7 @@ using ::abs;
 external/libcxx/include/cstdlib:161:44: error: declaration conflicts with target of using declaration already in scope
 inline _LIBCPP_INLINE_VISIBILITY long long abs(long long __x) _NOEXCEPT {return llabs(__x);}
 ```
-![xcode_downgrade_tip.png](https://upload-images.jianshu.io/upload_images/2829180-f96fddd73b004ebe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![xcode_downgrade_tip.png](/assets/images/f96fddd73b004ebe.webp)
 
 具体上下文可参见[XCode 9 - new LLVM headers causing errors](https://forums.developer.apple.com/thread/87814)，流程就是如下两步：
 
@@ -163,7 +163,7 @@ Lunch menu... pick a combo:
 ```shell
 make -j8
 ```
-![make_completed.png](https://upload-images.jianshu.io/upload_images/2829180-16af0d503617329f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![make_completed.png](/assets/images/16af0d503617329f.webp)
 
 硬件配置：2015顶配 MBP，Intel i7 2.5GHz、4核、16G内存、500 ssd，用时 1小时 11分钟
 
@@ -209,7 +209,7 @@ build/core/combo/mac_version.mk:40: ********************************************
 build/core/combo/mac_version.mk:41: *** Stop.. Stop.
 ```
 
-![macos_sdk_tip.png](https://upload-images.jianshu.io/upload_images/2829180-390a56500bce0ca7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![macos_sdk_tip.png](/assets/images/390a56500bce0ca7.webp)
 
 顾名思义，就是缺少了 MacOS sdk，直接[非官方](https://github.com/phracker/MacOSX-SDKs/releases)下载就可以了，下载到的文件是  `MacOSX10.11.sdk.tar.xz`  文件
 
@@ -232,7 +232,7 @@ make: *** [out/host/darwin-x86/obj/STATIC_LIBRARIES/libmcldScript_intermediates/
 make: *** Waiting for unfinished jobs....
 ```
 
-![xcode_commandline_tip.png](https://upload-images.jianshu.io/upload_images/2829180-92333565af92fa77.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![xcode_commandline_tip.png](/assets/images/92333565af92fa77.webp)
 
 
  如果没有安装执行如下命令安装：
@@ -257,7 +257,7 @@ make: *** [out/host/darwin-x86/obj/EXECUTABLES/aidl_intermediates/aidl_language_
 make: *** Waiting for unfinished jobs....
 ```
 
-![bison_error_tip.png](https://upload-images.jianshu.io/upload_images/2829180-4ef21d8d44beb3fd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![bison_error_tip.png](/assets/images/4ef21d8d44beb3fd.webp)
 
 具体原因可见 [build aosp on Mac OS 10.13 failed](http://android.2317887.n4.nabble.com/build-aosp-on-Mac-OS-10-13-failed-td435701.html)，原因就是直接下载下来的源码中的 bison 版本中包含一个 bug，官方也已[修复](https://android-review.googlesource.com/c/platform/external/bison/+/517740)，所以直接下载官方的最新版本替换即可
 
