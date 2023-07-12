@@ -2,7 +2,7 @@
 layout: post
 title:  "设计模式漫谈"
 author: "daweibayu"
-tags: Android
+tags: 设计模式
 excerpt_separator: <!--more-->
 ---
  <!--more-->
