@@ -30,7 +30,7 @@ Linux 下常见的进程通讯方式有 Socket、管道、信号、消息队列�
 
 1. 日常发送广播代码如下：
 
-```
+```kotlin
 Intent().also { intent ->
     intent.setAction("com.example.broadcast.MY_NOTIFICATION")
     intent.putExtra("data", "Notice me senpai!")
@@ -40,7 +40,7 @@ Intent().also { intent ->
 
 2. ContextWrapper.java 中的实现：
 
-```
+```java
 @Override
 public void sendBroadcast(Intent intent) {
     mBase.sendBroadcast(intent);
@@ -49,7 +49,7 @@ public void sendBroadcast(Intent intent) {
 
 3. 其中 Context 的实现类为 ContextImpl.java，sendBroadcast 实现如下：
 
-```
+```java
 @Override
 public void sendBroadcast(Intent intent) {
     warnIfCallingFromSystemProcess();
@@ -85,7 +85,7 @@ public void sendBroadcast(Intent intent) {
 看官可以根据这个主线去看下面的代码  
 [frameworks/base/core/java/android/app/ActivityManager.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/app/ActivityManager.java;l=4805) 中代码如下：
 
-```
+```java
 public static IActivityManager getService() {
     return IActivityManagerSingleton.get();
 }
@@ -103,7 +103,8 @@ private static final Singleton<IActivityManager> IActivityManagerSingleton =
 ```
 
 [frameworks/base/core/java/android/os/ServiceManager.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/os/ServiceManager.java;l=141) 中代码如下：
-```
+
+```java
 @UnsupportedAppUsage
 public static IBinder getService(String name) {
     try {
@@ -188,7 +189,8 @@ private static IServiceManager getIServiceManager() {
 
 
 [frameworks/base/core/java/com/android/internal/os/BinderInternal.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/BinderInternal.java;l=180)
-```
+
+```java
 public static final native IBinder getContextObject();
 ```
 
@@ -207,7 +209,7 @@ getContextObject 为 native 函数，具体实现在在 [frameworks/base/core/jn
 
 
 
-```
+```c++
 static jobject android_os_BinderInternal_getContextObject(JNIEnv* env, jobject clazz)
 {
     sp<IBinder> b = ProcessState::self()->getContextObject(NULL);
@@ -218,7 +220,7 @@ static jobject android_os_BinderInternal_getContextObject(JNIEnv* env, jobject c
 
 [frameworks/native/libs/binder/ProcessState.cpp](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/native/libs/binder/ProcessState.cpp;l=153) 代码如下：
 
-```
+```c++
 sp<IBinder> ProcessState::getContextObject(const sp<IBinder>& /*caller*/)
 {
     sp<IBinder> context = getStrongProxyForHandle(0);
@@ -367,7 +369,7 @@ ProcessState::ProcessState(const char* driver)
 }
 ```
 
-```
+```c++
 sp<T> sp<T>::make(Args&&... args) {
     T* t = new T(std::forward<Args>(args)...);
     sp<T> result;
@@ -384,14 +386,16 @@ sp<T> sp<T>::make(Args&&... args) {
 
 
 prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot/usr/include/i386-linux-gnu/sys/mman.h
-```
+```c++
 extern void * __REDIRECT_NTH (mmap,
 			      (void *__addr, size_t __len, int __prot,
 			       int __flags, int __fd, __off64_t __offset),
 			      mmap64);
 ```
+
 bionic/libc/bionic/mmap.cpp
-```
+
+```c++
 extern "C" void*  __mmap2(void*, size_t, int, int, int, size_t);
 
 void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offset) {
