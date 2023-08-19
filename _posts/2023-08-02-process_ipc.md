@@ -8,8 +8,6 @@ excerpt_separator: <!--more-->
 
 <!--more-->
 
-Android：Binder
-
 
 ## 缘由
 
@@ -417,6 +415,177 @@ void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offse
 
 
 未完待续
+
+linux/fs.h（这个头文件对于理解 Linux 的文件体系还是蛮重要的，建议有时间有兴趣的可以好好看一下）
+
+```
+struct file_operations {
+	struct module *owner;
+	loff_t (*llseek) (struct file *, loff_t, int);
+	ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
+	ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
+	ssize_t (*read_iter) (struct kiocb *, struct iov_iter *);
+	ssize_t (*write_iter) (struct kiocb *, struct iov_iter *);
+	int (*iopoll)(struct kiocb *kiocb, bool spin);
+	int (*iterate) (struct file *, struct dir_context *);
+	int (*iterate_shared) (struct file *, struct dir_context *);
+	__poll_t (*poll) (struct file *, struct poll_table_struct *);
+	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+	int (*mmap) (struct file *, struct vm_area_struct *);
+	unsigned long mmap_supported_flags;
+	int (*open) (struct inode *, struct file *);
+	int (*flush) (struct file *, fl_owner_t id);
+	int (*release) (struct inode *, struct file *);
+	int (*fsync) (struct file *, loff_t, loff_t, int datasync);
+	int (*fasync) (int, struct file *, int);
+	int (*lock) (struct file *, int, struct file_lock *);
+	ssize_t (*sendpage) (struct file *, struct page *, int, size_t, loff_t *, int);
+	unsigned long (*get_unmapped_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
+	int (*check_flags)(int);
+	int (*flock) (struct file *, int, struct file_lock *);
+	ssize_t (*splice_write)(struct pipe_inode_info *, struct file *, loff_t *, size_t, unsigned int);
+	ssize_t (*splice_read)(struct file *, loff_t *, struct pipe_inode_info *, size_t, unsigned int);
+	int (*setlease)(struct file *, long, struct file_lock **, void **);
+	long (*fallocate)(struct file *file, int mode, loff_t offset,
+			  loff_t len);
+	void (*show_fdinfo)(struct seq_file *m, struct file *f);
+#ifndef CONFIG_MMU
+	unsigned (*mmap_capabilities)(struct file *);
+#endif
+	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
+			loff_t, size_t, unsigned int);
+	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
+				   struct file *file_out, loff_t pos_out,
+				   loff_t len, unsigned int remap_flags);
+	int (*fadvise)(struct file *, loff_t, loff_t, int);
+
+	ANDROID_KABI_RESERVE(1);
+	ANDROID_KABI_RESERVE(2);
+	ANDROID_KABI_RESERVE(3);
+	ANDROID_KABI_RESERVE(4);
+} __randomize_layout;
+```
+
+其中对于 mmap 的映射关系绑定在 drivers/android/binder.c：
+
+```
+const struct file_operations binder_fops = {
+	.owner = THIS_MODULE,
+	.poll = binder_poll,
+	.unlocked_ioctl = binder_ioctl,
+	.compat_ioctl = compat_ptr_ioctl,
+	.mmap = binder_mmap,
+	.open = binder_open,
+	.flush = binder_flush,
+	.release = binder_release,
+};
+
+// 这里的 mmap 在其他逻辑里还会绑定 hpet_mmap、cached_mmap、kfd_mmap、radeon_mmap、vmw_mmap、siw_mmap、vb2_fop_mmap、
+// open_dice_mmap、sg_mmap、ashmem_mmap、usbdev_mmap、incfs_file_mmap、sock_mmap、had_pcm_mmap、kvm_device_mmap 等等
+
+static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
+{
+	struct binder_proc *proc = filp->private_data;
+
+	if (proc->tsk != current->group_leader)
+		return -EINVAL;
+
+	binder_debug(BINDER_DEBUG_OPEN_CLOSE,
+		     "%s: %d %lx-%lx (%ld K) vma %lx pagep %lx\n",
+		     __func__, proc->pid, vma->vm_start, vma->vm_end,
+		     (vma->vm_end - vma->vm_start) / SZ_1K, vma->vm_flags,
+		     (unsigned long)pgprot_val(vma->vm_page_prot));
+
+	if (vma->vm_flags & FORBIDDEN_MMAP_FLAGS) {
+		pr_err("%s: %d %lx-%lx %s failed %d\n", __func__,
+		       proc->pid, vma->vm_start, vma->vm_end, "bad vm_flags", -EPERM);
+		return -EPERM;
+	}
+	vma->vm_flags |= VM_DONTCOPY | VM_MIXEDMAP;
+	vma->vm_flags &= ~VM_MAYWRITE;
+
+	vma->vm_ops = &binder_vm_ops;
+	vma->vm_private_data = proc;
+
+	return binder_alloc_mmap_handler(&proc->alloc, vma);
+}
+```
+
+```
+int binder_alloc_mmap_handler(struct binder_alloc *alloc, struct vm_area_struct *vma)
+{
+	int ret;
+	const char *failure_string;
+	struct binder_buffer *buffer;
+
+	mutex_lock(&binder_alloc_mmap_lock);
+	if (alloc->buffer_size) {
+		ret = -EBUSY;
+		failure_string = "already mapped";
+		goto err_already_mapped;
+	}
+	alloc->buffer_size = min_t(unsigned long, vma->vm_end - vma->vm_start, SZ_4M);
+	mutex_unlock(&binder_alloc_mmap_lock);
+
+	alloc->buffer = (void __user *)vma->vm_start;
+
+	alloc->pages = kcalloc(alloc->buffer_size / PAGE_SIZE,
+			       sizeof(alloc->pages[0]),
+			       GFP_KERNEL);
+	if (alloc->pages == NULL) {
+		ret = -ENOMEM;
+		failure_string = "alloc page array";
+		goto err_alloc_pages_failed;
+	}
+
+	buffer = kzalloc(sizeof(*buffer), GFP_KERNEL);
+	if (!buffer) {
+		ret = -ENOMEM;
+		failure_string = "alloc buffer struct";
+		goto err_alloc_buf_struct_failed;
+	}
+
+	buffer->user_data = alloc->buffer;
+	list_add(&buffer->entry, &alloc->buffers);
+	buffer->free = 1;
+	binder_insert_free_buffer(alloc, buffer);
+	alloc->free_async_space = alloc->buffer_size / 2;
+	binder_alloc_set_vma(alloc, vma);
+	mmgrab(alloc->vma_vm_mm);
+
+	return 0;
+
+err_alloc_buf_struct_failed:
+	kfree(alloc->pages);
+	alloc->pages = NULL;
+err_alloc_pages_failed:
+	alloc->buffer = NULL;
+	mutex_lock(&binder_alloc_mmap_lock);
+	alloc->buffer_size = 0;
+err_already_mapped:
+	mutex_unlock(&binder_alloc_mmap_lock);
+	binder_alloc_debug(BINDER_DEBUG_USER_ERROR,
+			   "%s: %d %lx-%lx %s failed %d\n", __func__,
+			   alloc->pid, vma->vm_start, vma->vm_end,
+			   failure_string, ret);
+	return ret;
+}
+```
+
+```
+static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
+{
+	return kmalloc_array(n, size, flags | __GFP_ZERO);
+}
+
+static inline void *kzalloc(size_t size, gfp_t flags)
+{
+	return kmalloc(size, flags | __GFP_ZERO);
+}
+```
+
+这里可以看到，使用的是 kcalloc、kzalloc，再往下我就不追了，这两个都是基于 [slob](https://en.wikipedia.org/wiki/SLOB) (simple list of block) 的方式分配物理内存，其实看到很多文章中说 mmap 是用于映射文件到到内存，所以有效率问题。这么说在 Android 平台中，一定是错的。由这里的代码也可以看出，逻辑还是申请了一段物理内存，然后分别映射到用户空间，这也是为什么有所谓“一次写入”的特性。
 
 
 
