@@ -15,14 +15,14 @@ excerpt_separator: <!--more-->
 
 ## 通讯
 
-通讯的最终目的：**发送方A** 把 **数据α** 给到 **接收方B**。一般计算机语境中，通讯分为两种，线程间通讯与进程间通讯。  
-线程间通讯相对简单。以 Android 举例，其逻辑就是在线程 Ta 的执行流中把数据 α 放到线程 Tb 的 message queue 中，然后线程 Tb 的 Looper 轮询到 α，然后开始执行，从而完成此次通讯。谈线程的时候因为都可以认为是同一地址空间，所以没那么多概念。  
-Linux 下常见的进程通讯方式有 Socket、管道、信号、消息队列、共享内存等。其原理自然也是类似，不同点就是进程 Pa 与进程 Pb 在不同的虚拟地址空间内，由操作系统隔离，从而不能像线程一样直接操作对方的 message queue。各种概念就由此多了起来，比如虚拟地址、物理地址、内核态、用户态等等。
+通讯的最终目的：`发送方A` 把 `数据α` 给到 `接收方B`。一般计算机语境中，通讯分为两种，线程间通讯与进程间通讯。  
+线程间通讯相对简单。以 Android 举例，其逻辑就是在`线程 Ta`的执行流中把`数据 α `放到`线程 Tb`的 `message queue` 中，然后`线程 Tb` 的 `Looper` 轮询到 `数据α`，然后开始执行，从而完成此次通讯。谈线程的时候因为都可以认为是同一地址空间，所以没那么多概念。  
+Linux 下常见的进程通讯方式有 Socket、管道、信号、消息队列、共享内存等。其原理自然也是类似，不同点就是`进程 Pa` 与`进程 Pb`在不同的虚拟地址空间内，由操作系统隔离，从而不能像线程一样直接操作对方的 message queue。各种概念就由此多了起来，比如虚拟地址、物理地址、内核态、用户态等等。
 
 
 ## Android 进程间通讯
 
-这里就以 Android 的进程间通讯为例，最上层一直到最下层，看一下具体怎么实现，这里只关注主线，挂一漏万，其他非主线逻辑，诸位看官可以自行搜索。
+这里就以 Android 的进程间通讯为例，以深度优先方式从最上层一直到最下层，看一下具体是怎么实现的，这里只关注主线，挂一漏万，其他非主线逻辑，诸位看官可以自行搜索。
 
 我们知道 Broadcast 是可以做到跨进程通讯的，就以 Broadcast 为例，我们看看具体是怎么实现的。照旧，不扯淡，直接看代码
 
@@ -380,7 +380,7 @@ sp<T> sp<T>::make(Args&&... args) {
 由 std::call_once，我们可以看出，ProcessState 是一个单例。我们一直说 Binder 基于 mmap，当然最终实现也是如此，从代码一步一步最终也可以看出来。而且我们也都知道 mmap 是基于内存映射，即然都已经到这了，那我们就一杆子捅到底，看看 mmap 到底是怎么实现的。
 
 
-#### mmap 实现
+#### mmap 实现内核层实现
 
 
 prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot/usr/include/i386-linux-gnu/sys/mman.h
@@ -418,7 +418,7 @@ void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offse
 
 linux/fs.h（这个头文件对于理解 Linux 的文件体系还是蛮重要的，建议有时间有兴趣的可以好好看一下）
 
-```
+```c++
 struct file_operations {
 	struct module *owner;
 	loff_t (*llseek) (struct file *, loff_t, int);
@@ -467,9 +467,10 @@ struct file_operations {
 } __randomize_layout;
 ```
 
-其中对于 mmap 的映射关系绑定在 drivers/android/binder.c：
+其中对于 mmap 的映射关系绑定在 drivers/android/binder.c，struct file_operations 的 mmap 在其他逻辑里还会绑定 hpet_mmap、cached_mmap、kfd_mmap、radeon_mmap、vmw_mmap、siw_mmap、vb2_fop_mmap、open_dice_mmap、sg_mmap、ashmem_mmap、usbdev_mmap、incfs_file_mmap、sock_mmap、had_pcm_mmap、kvm_device_mmap 等等
 
-```
+```c++
+
 const struct file_operations binder_fops = {
 	.owner = THIS_MODULE,
 	.poll = binder_poll,
@@ -480,9 +481,6 @@ const struct file_operations binder_fops = {
 	.flush = binder_flush,
 	.release = binder_release,
 };
-
-// 这里的 mmap 在其他逻辑里还会绑定 hpet_mmap、cached_mmap、kfd_mmap、radeon_mmap、vmw_mmap、siw_mmap、vb2_fop_mmap、
-// open_dice_mmap、sg_mmap、ashmem_mmap、usbdev_mmap、incfs_file_mmap、sock_mmap、had_pcm_mmap、kvm_device_mmap 等等
 
 static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
 {
@@ -512,7 +510,108 @@ static int binder_mmap(struct file *filp, struct vm_area_struct *vma)
 }
 ```
 
+这里出现了结构体 struct vm_area_struct，需要标注一下，因为关于 linux 下虚拟内存的的管理就是靠的这个结构体，这里就不翻译了，大家可以看英文注释。  
+对内而言，是一段连续的虚拟内存，通过 vm_start - vm_end 标记。  
+整体而言，可以通过 vm_next、vm_prev 以链表形式串起来，也可以通过 vm_rb 以红黑树形式串起来。  
+struct vm_area_struct 用于描述用户态的虚拟地址空间，而 struct vm_struct 用于描述内核态的虚拟地址空间，struct page 用于描述物理内存页。  
+
+```c++
+/*
+ * This struct describes a virtual memory area. There is one of these
+ * per VM-area/task. A VM area is any part of the process virtual memory
+ * space that has a special rule for the page-fault handlers (ie a shared
+ * library, the executable area etc).
+ */
+struct vm_area_struct {
+	/* The first cache line has the info for VMA tree walking. */
+
+	unsigned long vm_start;		/* Our start address within vm_mm. */
+	unsigned long vm_end;		/* The first byte after our end address within vm_mm. */
+
+	/* linked list of VM areas per task, sorted by address */
+	struct vm_area_struct *vm_next, *vm_prev;
+
+	struct rb_node vm_rb;
+
+	/*
+	 * Largest free memory gap in bytes to the left of this VMA.
+	 * Either between this VMA and vma->vm_prev, or between one of the
+	 * VMAs below us in the VMA rbtree and its ->vm_prev. This helps
+	 * get_unmapped_area find a free area of the right size.
+	 */
+	unsigned long rb_subtree_gap;
+
+	/* Second cache line starts here. */
+
+	struct mm_struct *vm_mm;	/* The address space we belong to. */
+
+	/*
+	 * Access permissions of this VMA.
+	 * See vmf_insert_mixed_prot() for discussion.
+	 */
+	pgprot_t vm_page_prot;
+	unsigned long vm_flags;		/* Flags, see mm.h. */
+
+	/*
+	 * For areas with an address space and backing store,
+	 * linkage into the address_space->i_mmap interval tree.
+	 *
+	 * For private anonymous mappings, a pointer to a null terminated string
+	 * containing the name given to the vma, or NULL if unnamed.
+	 */
+
+	union {
+		struct {
+			struct rb_node rb;
+			unsigned long rb_subtree_last;
+		} shared;
+		/*
+		 * Serialized by mmap_sem. Never use directly because it is
+		 * valid only when vm_file is NULL. Use anon_vma_name instead.
+		 */
+		struct anon_vma_name *anon_name;
+	};
+
+	/*
+	 * A file's MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
+	 * list, after a COW of one of the file pages.	A MAP_SHARED vma
+	 * can only be in the i_mmap tree.  An anonymous MAP_PRIVATE, stack
+	 * or brk vma (with NULL file) can only be in an anon_vma list.
+	 */
+	struct list_head anon_vma_chain; /* Serialized by mmap_lock & page_table_lock */
+	struct anon_vma *anon_vma;	/* Serialized by page_table_lock */
+
+	/* Function pointers to deal with this struct. */
+	const struct vm_operations_struct *vm_ops;
+
+	/* Information about our backing store: */
+	unsigned long vm_pgoff;		/* Offset (within vm_file) in PAGE_SIZE units */
+	struct file * vm_file;		/* File we map to (can be NULL). */
+	void * vm_private_data;		/* was vm_pte (shared mem) */
+
+#ifdef CONFIG_SWAP
+	atomic_long_t swap_readahead_info;
+#endif
+#ifndef CONFIG_MMU
+	struct vm_region *vm_region;	/* NOMMU mapping region */
+#endif
+#ifdef CONFIG_NUMA
+	struct mempolicy *vm_policy;	/* NUMA policy for the VMA */
+#endif
+	struct vm_userfaultfd_ctx vm_userfaultfd_ctx;
+#ifdef CONFIG_SPECULATIVE_PAGE_FAULT
+	seqcount_t vm_sequence;
+	atomic_t vm_ref_count;		/* see vma_get(), vma_put() */
+#endif
+
+	ANDROID_KABI_RESERVE(1);
+	ANDROID_KABI_RESERVE(2);
+	ANDROID_KABI_RESERVE(3);
+	ANDROID_KABI_RESERVE(4);
+} __randomize_layout;
 ```
+
+```c++
 int binder_alloc_mmap_handler(struct binder_alloc *alloc, struct vm_area_struct *vma)
 {
 	int ret;
@@ -573,7 +672,7 @@ err_already_mapped:
 }
 ```
 
-```
+```c++
 static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 {
 	return kmalloc_array(n, size, flags | __GFP_ZERO);
