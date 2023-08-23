@@ -684,6 +684,8 @@ static inline void *kzalloc(size_t size, gfp_t flags)
 }
 ```
 
+kmalloc： kernel memory allocation
+
 这里可以看到，使用的是 kcalloc、kzalloc，再往下我就不追了，这两个都是基于 [slob](https://en.wikipedia.org/wiki/SLOB) (simple list of block) 的方式分配物理内存，其实看到很多文章中说 mmap 是用于映射文件到到内存，所以有效率问题。这么说在 Android 平台中，一定是错的。由这里的代码也可以看出，逻辑还是申请了一段物理内存，然后分别映射到用户空间，这也是为什么有所谓“一次写入”的特性。
 
 
