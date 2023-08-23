@@ -16,7 +16,9 @@ excerpt_separator: <!--more-->
 ## 通讯
 
 通讯的最终目的：`发送方A` 把 `数据α` 给到 `接收方B`。一般计算机语境中，通讯分为两种，线程间通讯与进程间通讯。  
+
 线程间通讯相对简单。以 Android 举例，其逻辑就是在`线程 Ta`的执行流中把`数据 α `放到`线程 Tb`的 `message queue` 中，然后`线程 Tb` 的 `Looper` 轮询到 `数据α`，然后开始执行，从而完成此次通讯。谈线程的时候因为都可以认为是同一地址空间，所以没那么多概念。  
+
 Linux 下常见的进程通讯方式有 Socket、管道、信号、消息队列、共享内存等。其原理自然也是类似，不同点就是`进程 Pa` 与`进程 Pb`在不同的虚拟地址空间内，由操作系统隔离，从而不能像线程一样直接操作对方的 message queue。各种概念就由此多了起来，比如虚拟地址、物理地址、内核态、用户态等等。
 
 
@@ -26,7 +28,7 @@ Linux 下常见的进程通讯方式有 Socket、管道、信号、消息队列�
 
 我们知道 Broadcast 是可以做到跨进程通讯的，就以 Broadcast 为例，我们看看具体是怎么实现的。照旧，不扯淡，直接看代码
 
-1. 日常发送广播代码如下：
+日常发送广播代码如下：
 
 ```kotlin
 Intent().also { intent ->
@@ -36,7 +38,7 @@ Intent().also { intent ->
 }
 ```
 
-2. ContextWrapper.java 中的实现：
+ContextWrapper.java 中的实现：
 
 ```java
 @Override
@@ -45,7 +47,7 @@ public void sendBroadcast(Intent intent) {
 }
 ```
 
-3. 其中 Context 的实现类为 ContextImpl.java，sendBroadcast 实现如下：
+其中 Context 的实现类为 ContextImpl.java，sendBroadcast 实现如下：
 
 ```java
 @Override
@@ -66,7 +68,7 @@ public void sendBroadcast(Intent intent) {
 
 所有逻辑都在 `ActivityManager.getService().broadcastIntentWithFeature()` 中，按照我们常规了解到的知识而言：
 
-* ServiceManager 是用于处理 binder 通讯的，单独一个进程
+* ServiceManager 用于处理 binder 通讯，单独一个进程
 * SystemServer 包含各种服务，包含 ActivityManagerService、WindowManagerService、InputManagerService 等，单独一个进程
 * app 进程当然也是一个单独进程
 
@@ -80,8 +82,7 @@ public void sendBroadcast(Intent intent) {
     - ServiceManager::rawGetService
       - BinderInternal::getContextObject
 
-看官可以根据这个主线去看下面的代码  
-[frameworks/base/core/java/android/app/ActivityManager.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/app/ActivityManager.java;l=4805) 中代码如下：
+看官可以根据这个主线去看下面的代码 [frameworks/base/core/java/android/app/ActivityManager.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/app/ActivityManager.java;l=4805) 中代码如下：
 
 ```java
 public static IActivityManager getService() {
@@ -185,8 +186,8 @@ private static IServiceManager getIServiceManager() {
 }
 ```
 
+接着往下看 [frameworks/base/core/java/com/android/internal/os/BinderInternal.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/BinderInternal.java;l=180) 实现：
 
-[frameworks/base/core/java/com/android/internal/os/BinderInternal.java](https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/BinderInternal.java;l=180)
 
 ```java
 public static final native IBinder getContextObject();
@@ -204,7 +205,6 @@ getContextObject 为 native 函数，具体实现在在 [frameworks/base/core/jn
   - ProcessState::getContextObject
     - getStrongProxyForHandle
         - ipc->transact
-
 
 
 ```c++
@@ -377,10 +377,10 @@ sp<T> sp<T>::make(Args&&... args) {
 }
 ```
 
-由 std::call_once，我们可以看出，ProcessState 是一个单例。我们一直说 Binder 基于 mmap，当然最终实现也是如此，从代码一步一步最终也可以看出来。而且我们也都知道 mmap 是基于内存映射，即然都已经到这了，那我们就一杆子捅到底，看看 mmap 到底是怎么实现的。
+由 std::call_once，我们可以看出，ProcessState 是一个单例。我们一直说 Binder 基于 mmap，当然最终实现也是如此，从代码一步一步最终也可以看出来。而且我们也都知道 mmap 是基于内存映射，但内存映射到底是怎么实现的呢？我们接着往下看
 
 
-#### mmap 实现内核层实现
+#### mmap 内核层实现
 
 
 prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot/usr/include/i386-linux-gnu/sys/mman.h
