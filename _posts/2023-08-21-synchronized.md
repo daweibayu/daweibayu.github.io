@@ -295,8 +295,21 @@ static inline __always_inline int __futex(volatile void* ftx, int op, int value,
 
 ### kernel 层：Futex(Fast User-space Mutex)
 
+common/include/uapi/asm-generic/unistd.h
+```
+#define __NR_futex 98
+__SC_3264(__NR_futex, sys_futex_time32, sys_futex)
+#endif
+```
+
 __NR_futex
 sys_futex_time32
+
+
+
+使用Futex同步机制，如果用于进程间同步，需要先调用mmap()创建一块共享内存，Futex变量就位于共享区。
+
+
 
 所以可以简单理解:
 1. 在 framework 层做的东西不多，就是在代码段前加了 monitorenter 和代码段后添加了 monitorexit
@@ -307,3 +320,6 @@ sys_futex_time32
 关于 futex 介绍的比较好的文章 [Futex 简述](http://blog.foool.net/2021/04/futex-%E7%BB%BC%E8%BF%B0/)
 [手机平台上的用户空间锁概述](https://blog.csdn.net/feelabclihu/article/details/125814721)
 
+
+
+Bionic 不支持 pthread_cancel（被动），支持 pthread_exit（主动）
