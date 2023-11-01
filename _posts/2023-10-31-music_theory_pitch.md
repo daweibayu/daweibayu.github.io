@@ -43,15 +43,15 @@ excerpt_separator: <!--more-->
 
 ### 钢琴键盘
 
-![钢琴键盘](/assets/images/piano_keys.png)
+![钢琴键盘](/assets/images/music/piano_keys.png)
 
 官方解释：键盘如图所示，现在的钢琴一般共有 88 个高低不同的音，几乎包括了乐音体系中全部乐音。
 
-![Alt text](../assets/images/piano_unit_group.png)
+![Alt text](../assets/images/music/piano_unit_group.png)
 钢琴每组一共 12 个键，7 白 5 黑，一共有 12 个音，这就要说一说十二平均律
 
 但我们这里先不解释具体键盘的内容，仍从频率角度开始讲，钢琴键对应的音高如图：
-![音高](../assets/images/faderpro-note-frequency-chart-1100x786.png)
+![音高](../assets/images/music/faderpro-note-frequency-chart-1100x786.png)
 
 不用说也知道，琴键从左到右，频率次第升高，但是升高的规律是什么？ - 答：十二平均律
 
@@ -77,7 +77,7 @@ excerpt_separator: <!--more-->
 
 sin(x)、sin(x/2)、sin(x/2) + sin(x)  图分别如下所示：
 
-![sinx](../assets/images/sinx.png){: width="30%"} + ![sinx2](../assets/images/sinx2.png){: width="30%"}  = ![叠加](../assets/images/sinxpxinx2.png){: width="30%"}
+![sinx](../assets/images/music/sinx.png){: width="30%"}+![sinx2](../assets/images/music/sinx2.png){: width="30%"}=![叠加](../assets/images/music/sinxpxinx2.png){: width="30%"}
 
 可见频率倍乘的正弦波的叠加后，其波型也是`规律`的，故：
 
@@ -108,3 +108,4 @@ ps：题外话，为啥规律的波形容易让人产生和谐感？个人猜测
 
 * [写给理工科人看的乐理（一）声学基础](https://zhuanlan.zhihu.com/p/395134247)
 * [乐理101－乐理原来可以这么学](https://zhuanlan.zhihu.com/p/24538434)
+* [Desmos - Graphing Calculator](https://www.desmos.com/calculator)、[函数图形绘制器](https://zh.numberempire.com/graphingcalculator.php)
