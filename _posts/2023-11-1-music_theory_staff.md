@@ -57,13 +57,22 @@ excerpt_separator: <!--more-->
 
 常见的谱号分为F谱号、C谱号和G谱号三类。
 
-|名字|符号|来由|表示音|具体位置|
+|  名字  |  符号  |  来由  |  表示音  | 具体位置 |
 |---|---|---|---|---|
 |F谱号|<font size=7>𝄢</font>|花体字母F|小字组f(174.61Hz)|谱号的两个点夹着的线(间)|
-|C谱号|<font size=7>𝄡</font>|花体字母C|小字一组c<sup>1</sup>(261.63Hz)(中央C)|谱号的两个点夹着的线(间)|
-|G谱号|<font size=7>𝄞</font>|花体的字母G|小字一组g<sup>1</sup>(392Hz)|谱号的两个点夹着的线(间)|
+|C谱号|<font size=7>𝄡</font>|花体字母C|小字一组c<sup>1</sup>(261.63Hz)(中央C)|谱号的两个须须夹着的线(间)|
+|G谱号|<font size=7>𝄞</font>|花体的字母G|小字一组g<sup>1</sup>(392Hz)|谱号的螺旋围绕着的线(间)|
 
 分别如下图所示：
 ![Alt text](../assets/images/music/vci8q6qkuy5cmnq7.png)
 ![Alt text](../assets/images/music/ngk1ptu6kkvjhk3a.png)
 ![Alt text](../assets/images/music/x9a6z19xb55ic04x.png)
+
+`线 + 间 + 谱号，即可决定该谱每条线（间）的具体频率，即音的高低可以被确定。`
+
+
+
+
+## 参考
+
+基本乐理 - 李重光
