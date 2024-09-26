@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "CAN bus 简介"
+title:  "CAN bus 简介(未完)"
 author: "daweibayu"
 tags: protocol
 excerpt_separator: <!--more-->
