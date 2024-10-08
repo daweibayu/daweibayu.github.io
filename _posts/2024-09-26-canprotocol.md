@@ -28,3 +28,5 @@ CAN：controller area network，主要设计用于 ECU 通讯。CAN bus 是广�
  * [CAN Bus 协议详解](https://juejin.cn/post/7369470562144305162?searchId=2024092610101490CCD6B500AD50EF9A11)  
  * [一篇易懂的CAN通讯协议指南](http://www.uml.org.cn/car/202403264.asp)
  * [ISO11898全套资料](https://gitcode.com/open-source-toolkit/2356c/overview)
+ * [The CAN Bus Protocol Tutorial](https://kvaser.com/can-protocol-tutorial/)
+ * [什么是CAN总线？](https://bbs.huaweicloud.com/blogs/367883)
