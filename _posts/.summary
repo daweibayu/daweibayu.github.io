@@ -1,0 +1,14 @@
+[
+  {
+    "filename": "file1.md",
+    "title": "File 1 Title",
+    "author": "Author Name",
+    "updated_at": "2024-12-19T12:34:56Z"
+  },
+  {
+    "filename": "file2.md",
+    "title": "File 2 Title",
+    "author": "Another Author",
+    "updated_at": "2024-12-20T09:10:11Z"
+  }
+]
