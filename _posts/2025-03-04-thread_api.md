@@ -48,6 +48,9 @@ int   pthread_once(pthread_once_t *, void (*)(void));
 
 ## Java Thread
 
+Java 层和线程直接相关的 api 如下（suspend、resume、stop、destroy 等均以废弃）：
+
+`Thread.java`
 ```java
 public final void join(long millis)
 public void interrupt()
@@ -56,13 +59,20 @@ public static void sleep(long millis)
 public static native void yield();
 ```
 
-suspend、resume、stop、destroy 等均以废弃。
-
+`Object.java`
 ```java
  public final native void wait(long timeout, int nanos)
  @FastNative public final native void notifyAll();
  @FastNative public final native void notify();
 ```
+
+* `start` 通过 `pthread_create` 来创建内核线程；  
+* `join` 是通过 `pthread_join` 来阻塞调用线程；  
+* `yield` 是通过  `sched_yield` 来实现非阻塞且无延迟的让出 cpu [sched_yield](https://pubs.opengroup.org/onlinepubs/9699919799/)；  
+* `sleep` 通过 `pthread_cond_timedwait` 结合高精度时钟（ CLOCK_REALTIME 或 CLOCK_MONOTONIC ）实现限时等待；  
+* `wait` 是通过 `pthread_cond_timedwait(&_cond, &_mutex, &ts)` 来等带线程；  
+* `notify` 则是通过 `pthread_cond_signal(&_cond)` 来唤醒一个等待的线程；  
+* `notifyAll` 则是通过 `pthread_cond_broadcast(&_cond)` 来唤醒一个等待的线程；  
 
 
 ```C++
@@ -81,14 +91,24 @@ void ObjectMonitor::wait(jlong millis) {
 }
 ```
 
-
-* `start` 通过 `pthread_create` 来创建内核线程；  
-* `join` 是通过 `pthread_join` 来阻塞调用线程；  
-* `yield` 是通过  `sched_yield` 来实现非阻塞且无延迟的让出 cpu [sched_yield](https://pubs.opengroup.org/onlinepubs/9699919799/)；  
-* `sleep` 通过 `pthread_cond_timedwait` 结合高精度时钟（ CLOCK_REALTIME 或 CLOCK_MONOTONIC ）实现限时等待；  
-* `wait` 是通过 `pthread_cond_timedwait(&_cond, &_mutex, &ts)` 来等带线程；  
-* `notify` 则是通过 `pthread_cond_signal(&_cond)` 来唤醒一个等待的线程；  
-* `notifyAll` 则是通过 `pthread_cond_broadcast(&_cond)` 来唤醒一个等待的线程；  
+所以其实弄懂 pthread api 的作用，其实就知道 Java 层线程的边界在哪里，所以接下来详细介绍 pthread 的 api。
 
 
+ps：这中间其实还有 art 层 `thread.cc` 的桥接，这个过程其实也会限制 Java 层调用的边界
 
+
+## 详解 pthread api
+
+
+* `pthread_create` 用于创建线程
+* `pthread_detach` 用于分离线程
+* `pthread_equal` 对比两个线程是否为同一个实体
+* `pthread_exit` 主动终止当前线程
+* `pthread_cancel` 向另一个线程发送取消请求
+* `pthread_join` 阻塞等待指定线程结束，并回收其资源
+
+
+
+
+pthread_mutex_init、pthread_mutex_lock、pthread_mutex_destroy、pthread_mutex_trylock、pthread_mutex_unlock
+pthread_cond_destroy、pthread_cond_init、pthread_cond_timedwait、pthread_cond_wait、pthread_cond_signal、pthread_cond_broadcast、pthread_once
