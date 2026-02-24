@@ -154,3 +154,6 @@ excerpt_separator: <!--more-->
 12. 目前的 SoT 仍然是中心化的，权利集中，后续是否要去中心化？
 13. EP 目前仍然是任务驱动，而不是实验驱动，后续改如何做？
 14. 多 agent 执行冲突问题
+
+
+**此文不一定及时更新，最新的请跳转 [github - AIWorkflowTemplate](https://github.com/daweibayu/AIWorkflowTemplate)。**
